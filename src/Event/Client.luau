@@ -13,7 +13,7 @@ function ClientEvent.new<T...>(name: string): Types.ClientEvent<T...>
     self._name = name
     
     -- Wait for the server to create the remotes folder
-    local remotes = workspace:WaitForChild(Constants.RemoteFolderName)
+    local remotes: Folder = workspace:WaitForChild(Constants.RemoteFolderName)
 
     -- Wait for the server to create the remote event
     self._remoteEvent = remotes:WaitForChild(name)
@@ -25,7 +25,7 @@ function ClientEvent.Name<T...>(self: Types.ClientEvent<T...>)
     return self._name
 end
 
-function ClientEvent.Connect<T...>(self: Types.ClientEvent<T...>, callback: (T...) -> ()): () -> ()
+function ClientEvent.Connect<T...>(self: Types.ClientEvent<T...>, callback: Types.Callback<T...>): Types.CleanupFn
     local connection = self._remoteEvent.OnClientEvent:Connect(callback)
 
     return function()
@@ -33,7 +33,7 @@ function ClientEvent.Connect<T...>(self: Types.ClientEvent<T...>, callback: (T..
     end
 end
 
-function ClientEvent.Once<T...>(self: Types.ClientEvent<T...>, callback: (T...) -> ()): () -> ()
+function ClientEvent.Once<T...>(self: Types.ClientEvent<T...>, callback: Types.Callback<T...>): Types.CleanupFn
     local connection = self._remoteEvent.OnClientEvent:Once(callback)
 
     return function()

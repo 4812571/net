@@ -1,10 +1,11 @@
+--!strict
 -- Note: better types for promise cannot exist until luau supports them.
 export type Promise<T...> = {
     [any]: any
 }
 
 export type CleanupFn = () -> ()
-export type Handler<R, T...> = (Player, T...) -> R
+export type Handler<R, T...> = (player: Player, T...) -> R
 export type Callback<T...> = (T...) -> ()
 
 type SharedFunctionTrait = {
@@ -14,11 +15,11 @@ type SharedFunctionTrait = {
 }
 
 type ServerFunctionTrait<R, T...> = {
-    Handle: (ServerFunctionTrait<R, T...>, Handler<R, T...>) -> (),
+    Handle: (self: ServerFunctionTrait<R, T...>, callback: Handler<R, T...>) -> (),
 }
 
 type ClientFunctionTrait<R, T...> = {
-    Invoke: (ClientFunctionTrait<R, T...>, T...) -> Promise<R>,
+    Invoke: (self: ClientFunctionTrait<R, T...>, T...) -> Promise<R>,
 }
 
 type SharedEventTrait = {
@@ -28,14 +29,15 @@ type SharedEventTrait = {
 }
 
 type ServerEventTrait<T...> = {
-    Fire: (ServerEventTrait<T...>, Player, T...) -> (),
-    FireExcept: (ServerEventTrait<T...>, Player, T...) -> (),
-    FireAll: (ServerEventTrait<T...>, T...) -> (),
+    Fire: (self: ServerEventTrait<T...>, player: Player, T...) -> (),
+    Test: (self: ServerEventTrait<T...>, player: Player, T...) -> (),
+    FireExcept: (self: ServerEventTrait<T...>, player: Player, T...) -> (),
+    FireAll: (self: ServerEventTrait<T...>, T...) -> (),
 }
 
 type ClientEventTrait<T...> = {
-    Connect: (ClientEventTrait<T...>, (T...) -> ()) -> CleanupFn,
-    Once: (ClientEventTrait<T...>, (T...) -> ()) -> CleanupFn,
+    Connect: (self: ClientEventTrait<T...>, callback: (T...) -> ()) -> CleanupFn,
+    Once: (self: ClientEventTrait<T...>, callback: (T...) -> ()) -> CleanupFn,
 }
 
 export type ServerFunction<R, T...> = ServerFunctionTrait<R, T...> & SharedFunctionTrait
