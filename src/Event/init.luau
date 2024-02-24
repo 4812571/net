@@ -1,21 +1,24 @@
 --!strict
-local Types = require(script.Parent.Types)
+--!native
 
 local RunService = game:GetService("RunService")
+
+local Library = script.Parent
+
+local Types = require(Library.Types)
+
+type Event<T...> = Types.Event<T...>
 
 local ClientEvent = require(script.Client)
 local ServerEvent = require(script.Server)
 
-local Event = {}
-
-function Event.new<T...>(name): Types.Event<T...>
+local function Event<T...>(name): Event<T...>
     if RunService:IsClient() then
-        return ClientEvent.new(name)
+        return ClientEvent(name)
     end
 
-    -- Why is this not type-correct?
     if RunService:IsServer() then
-        return (ServerEvent.new(name) :: any) :: Types.Event<T...>
+        return ServerEvent(name)
     end
 
     error("Invalid calling runtime, Event.new can only be called on the server or client")

@@ -1,51 +1,62 @@
 --!strict
 -- Note: better types for promise cannot exist until luau supports them.
-export type Promise<T...> = {
-    [any]: any
+
+local Libary = script.Parent
+local Packages = Libary.Parent
+
+local Signal = require(Packages.Signal)
+
+type Signal<T...> = Signal.Signal<T...>
+
+export type Promise<T> = {
+    await: (self: Promise<T>) -> T,
+    andThen: (self: Promise<T>, callback: (T) -> any) -> any,
 }
 
-export type CleanupFn = () -> ()
-export type Handler<R, T...> = (player: Player, T...) -> R
+export type Cleanup = () -> ()
+export type Handler<R, A...> = (player: Player, A...) -> R
 export type Callback<T...> = (T...) -> ()
 
-type SharedFunctionTrait = {
-    _name: string,
-    _remoteFunction: RemoteFunction,
-    Name: (SharedFunctionTrait) -> string,
+export type Event<T...> = {
+    -- Shared
+    Name: string,
+    RemoteEvent: RemoteEvent,
+
+    -- Client
+    Connect: (self: Event<T...>, callback: Callback<T...>) -> Cleanup,
+    Once: (self: Event<T...>, callback: Callback<T...>) -> Cleanup,
+
+    -- Server
+    Fire: (self: Event<T...>, player: Player, T...) -> (),
+    FireExcept: (self: Event<T...>, player: Player, T...) -> (),
+    FireAll: (self: Event<T...>, T...) -> (),
 }
 
-type ServerFunctionTrait<R, T...> = {
-    Handle: (self: ServerFunctionTrait<R, T...>, callback: Handler<R, T...>) -> (),
+export type Function<R, A...> = {
+    -- Shared
+    Name: string,
+    RemoteFunction: RemoteFunction,
+
+    -- Server
+    Handle: (self: Function<R, A...>, callback: Handler<R, A...>) -> Cleanup,
+
+    -- Client
+    Invoke: (self: Function<R, A...>, A...) -> any,
 }
 
-type ClientFunctionTrait<R, T...> = {
-    Invoke: (self: ClientFunctionTrait<R, T...>, T...) -> Promise<R>,
+export type Value<T> = {
+    -- Private
+    _value: T,
+
+    -- Shared
+    Name: string,
+    RemoteEvent: RemoteEvent,
+    Get: (self: Value<T>) -> T,
+    Observe: (self: Value<T>, callback: (T) -> Cleanup) -> Cleanup,
+    Changed: Signal<T>,
+
+    -- Server
+    Set: (self: Value<T>, value: T) -> (),
 }
-
-type SharedEventTrait = {
-    _name: string,
-    _remoteEvent: RemoteEvent,
-    Name: (SharedEventTrait) -> string,
-}
-
-type ServerEventTrait<T...> = {
-    Fire: (self: ServerEventTrait<T...>, player: Player, T...) -> (),
-    Test: (self: ServerEventTrait<T...>, player: Player, T...) -> (),
-    FireExcept: (self: ServerEventTrait<T...>, player: Player, T...) -> (),
-    FireAll: (self: ServerEventTrait<T...>, T...) -> (),
-}
-
-type ClientEventTrait<T...> = {
-    Connect: (self: ClientEventTrait<T...>, callback: (T...) -> ()) -> CleanupFn,
-    Once: (self: ClientEventTrait<T...>, callback: (T...) -> ()) -> CleanupFn,
-}
-
-export type ServerFunction<R, T...> = ServerFunctionTrait<R, T...> & SharedFunctionTrait
-export type ClientFunction<R, T...> = ClientFunctionTrait<R, T...> & SharedFunctionTrait
-export type Function<R, T...> = ServerFunction<R, T...> | ClientFunction<R, T...>
-
-export type ServerEvent<T...> = ServerEventTrait<T...> & SharedEventTrait
-export type ClientEvent<T...> = ClientEventTrait<T...> & SharedEventTrait
-export type Event<T...> = ServerEvent<T...> | ClientEvent<T...>
 
 return nil

@@ -1,35 +1,34 @@
 --!strict
-local Types = require(script.Parent.Parent.Types)
+--!native
 
-local Child = require(script.Parent.Parent.Child)
-local Constants = require(script.Parent.Parent.Constants)
+local Library = script.Parent.Parent
 
-local ServerFunction = {}
-ServerFunction.__index = ServerFunction
+local Types = require(Library.Types)
 
-function ServerFunction.new<R, T...>(name: string): Types.ServerFunction<R, T...>
-    local self = setmetatable({}, ServerFunction)
-    self._name = name
+type Function<R, A...> = Types.Function<R, A...>
+type Handler<R, A...> = Types.Handler<R, A...>
 
-    local remotesFolder = Child(workspace, Constants.RemoteFolderName, function()
-        return Instance.new("Folder")
-    end)
+local Instances = require(Library.Instances)
 
-    local remoteFunction = Child(remotesFolder, name, function()
-        return Instance.new("RemoteFunction")
-    end)
-
-    self._remoteFunction = remoteFunction
-
-    return (self :: any) :: Types.ServerFunction<R, T...>
+local function Handle<R, A...>(self: Function<R, A...>, handler: Handler<R, A...>)
+    self.RemoteFunction.OnServerInvoke = handler
 end
 
-function ServerFunction.Name<R, T...>(self: Types.ServerFunction<R, T...>)
-    return self._name
+local function Invoke<R, A...>(self: Function<R, A...>): R
+    error(`Attempt to call invoke from the server.`)
 end
 
-function ServerFunction.Handle<R, T...>(self: Types.ServerFunction<R, T...>, handler: Types.Handler<R, T...>)
-    self._remoteFunction.OnServerInvoke = handler
+local function ServerFunction<R, A...>(name: string): Function<R, A...>
+    local remoteFunction = Instances.RemoteFunction(name)
+
+    local serverFunction = {
+        Name = name,
+        RemoteFunction = remoteFunction,
+        Handle = Handle,
+        Invoke = Invoke,
+    }
+
+    return (serverFunction :: any) :: Function<R, A...>
 end
 
 return ServerFunction

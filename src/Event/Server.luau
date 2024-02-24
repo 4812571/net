@@ -1,51 +1,57 @@
 --!strict
+--!native
+
 local Players = game:GetService("Players")
 
-local Types = require(script.Parent.Parent.Types)
+local Library = script.Parent.Parent
 
-local Child = require(script.Parent.Parent.Child)
-local Constants = require(script.Parent.Parent.Constants)
+local Types = require(Library.Types)
 
-local ServerEvent = {}
-ServerEvent.__index = ServerEvent
+type Event<T...> = Types.Event<T...>
+type Callback<T...> = Types.Callback<T...>
 
-function ServerEvent.new<T...>(name: string): Types.ServerEvent<T...>
-    local self = setmetatable({}, ServerEvent)
-    self._name = name
-    
-    local remotesFolder = Child(workspace, Constants.RemoteFolderName, function()
-        return Instance.new("Folder")
-    end)
+local Instances = require(Library.Instances)
 
-    local remoteEvent = Child(remotesFolder, name, function()
-        return Instance.new("RemoteEvent")
-    end)
-
-    self._remoteEvent = remoteEvent
-
-    return (self :: any) :: Types.ServerEvent<T...>
+local function Connect<T...>(self: Event<T...>, callback: Callback<T...>)
+    error("Attempt to call :Connect on a server-side event.")
 end
 
-function ServerEvent.Name<T...>(self: Types.ServerEvent<T...>)
-    return self._name
+local function Once<T...>(self: Event<T...>, callback: Callback<T...>)
+    error("Attempt to call :Once on a server-side event.")
 end
 
-function ServerEvent.Fire<T...>(self: Types.ServerEvent<T...>, player: Player, ...: T...)
-    self._remoteEvent:FireClient(player, ...)
+local function Fire<T...>(self: Event<T...>, player: Player, ...: T...)
+    self.RemoteEvent:FireClient(player, ...)
 end
 
-function ServerEvent.FireExcept<T...>(self: Types.ServerEvent<T...>, player: Player, ...: T...)
+local function FireExcept<T...>(self: Event<T...>, player: Player, ...: T...)
     for _, otherPlayer in Players:GetPlayers() do
-        if otherPlayer ~= player then
-            self._remoteEvent:FireClient(otherPlayer, ...)
+        if otherPlayer == player then
+            continue
         end
+
+        self.RemoteEvent:FireClient(player, ...)
     end
 end
 
-function ServerEvent.FireAll<T...>(self: Types.ServerEvent<T...>, ...: T...)
-    for _, player in Players:GetPlayers() do
-        self._remoteEvent:FireClient(player, ...)
-    end
+local function FireAll<T...>(self: Event<T...>, ...: T...)
+    self.RemoteEvent:FireAllClients(...)
+end
+
+local function ServerEvent<T...>(name: string): Event<T...>
+    local remote = Instances.RemoteEvent("Event", name)
+
+    local serverEvent = {
+        Name = name,
+        RemoteEvent = remote,
+        Connect = Connect,
+        Once = Once,
+        Fire = Fire,
+        FireAll = FireAll,
+        FireExcept = FireExcept,
+    }
+
+    return (serverEvent :: any) :: Event<T...>
 end
 
 return ServerEvent
