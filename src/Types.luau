@@ -1,5 +1,5 @@
 --!strict
--- Note: better types for promise cannot exist until luau supports them.
+--!native
 
 local Libary = script.Parent
 local Packages = Libary.Parent

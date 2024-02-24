@@ -1,12 +1,25 @@
+--!strict
+--!native
+
 local RunService = game:GetService("RunService")
 
 local function GetInstance(parent: Instance, name: string, type: string, timeout: number?): Instance
     if RunService:IsServer() then
-        local instance = parent:FindFirstChild(name)
+        local instance: Instance? = parent:FindFirstChild(name)
 
         if not instance then
             instance = Instance.new(type)
+
+            if not instance then
+                error("Failed to create an instance of type '{type}'.")
+            end
+
             instance.Parent = parent
+            instance.Name = name
+        end
+
+        if not instance then
+            error("Failed to create or find an instance called '{name}'.")
         end
 
         if not instance:IsA(type) then
@@ -43,12 +56,9 @@ local Folders = {
     Event = Folder(MainFolder, "Event"),
     Function = Folder(MainFolder, "Function"),
     Value = Folder(MainFolder, "Value"),
-    Array = Folder(MainFolder, "Array"),
-    Set = Folder(MainFolder, "Set"),
-    Map = Folder(MainFolder, "Map"),
 }
 
-export type EventObjectKind = "Event" | "Value" | "Array" | "Set" | "Map"
+export type EventObjectKind = "Event" | "Value"
 
 local function RemoteEvent(kind: EventObjectKind, name: string): RemoteEvent
     return GetInstance(Folders[kind], name, "RemoteEvent") :: RemoteEvent
