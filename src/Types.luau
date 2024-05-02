@@ -36,7 +36,7 @@ export type Function<R, A...> = {
     Handle: (self: Function<R, A...>, callback: Handler<R, A...>) -> Cleanup,
 
     -- Client
-    Invoke: (self: Function<R, A...>, A...) -> any,
+    Invoke: (self: Function<R, A...>, A...) -> R,
 }
 
 export type Value<T> = {
