@@ -8,11 +8,6 @@ local Signal = require(Packages.Signal)
 
 type Signal<T...> = Signal.Signal<T...>
 
-export type Promise<T> = {
-    await: (self: Promise<T>) -> T,
-    andThen: (self: Promise<T>, callback: (T) -> any) -> any,
-}
-
 export type Cleanup = () -> ()
 export type Handler<R, A...> = (player: Player, A...) -> R
 export type Callback<T...> = (T...) -> ()
